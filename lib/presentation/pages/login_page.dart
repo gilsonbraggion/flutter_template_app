@@ -6,11 +6,13 @@ class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
+      appBar: AppBar(
+        title: const Text('Login'),
+        automaticallyImplyLeading: false, // 👈 REMOVE A SETA
+      ),
       body: Center(
         child: ElevatedButton(
           onPressed: () {
-            // Simula login com sucesso
             // Login bem-sucedido → vai para biometria
             Navigator.pushReplacementNamed(context, '/biometric');
           },

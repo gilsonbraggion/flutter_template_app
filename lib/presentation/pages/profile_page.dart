@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 class ProfilePage extends StatelessWidget {
-
   final String userName;
 
   const ProfilePage({
@@ -9,35 +8,28 @@ class ProfilePage extends StatelessWidget {
     required this.userName,
   });
 
- @override
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Perfil'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Olá, $userName 👋',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-
-            const SizedBox(height: 24),
-
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  '/login',
-                  (route) => false,
-                );
-              },
-              child: const Text('Logout'),
-            ),
-          ],
-        ),
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Olá, $userName 👋',
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/login',
+                (route) => false,
+              );
+            },
+            child: const Text('Logout'),
+          ),
+        ],
       ),
     );
   }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'dashboard_page.dart';
 import 'transactions_page.dart';
 import 'profile_page.dart';
-
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -19,22 +18,21 @@ class _HomePageState extends State<HomePage> {
     ProfilePage(userName: 'Gilson'),
   ];
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Fintech App')),
-
-      body: _pages[_selectedIndex],
-
+      appBar: AppBar(
+        title: const Text('Fintech App'),
+        automaticallyImplyLeading: false, // 👈 REMOVE A SETA
+      ),
+      body: SafeArea(
+        child: _pages[_selectedIndex],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
+        onTap: (index) {
+          setState(() => _selectedIndex = index);
+        },
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard),
@@ -47,7 +45,7 @@ class _HomePageState extends State<HomePage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: 'Perfil',
-        ),
+          ),
         ],
       ),
     );
