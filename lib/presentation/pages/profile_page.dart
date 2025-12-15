@@ -10,26 +10,31 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Olá, $userName 👋',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                '/login',
-                (route) => false,
-              );
-            },
-            child: const Text('Logout'),
-          ),
-        ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Perfil'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Olá, $userName 👋',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/login',
+                  (route) => false,
+                );
+              },
+              child: const Text('Logout'),
+            ),
+          ],
+        ),
       ),
     );
   }
