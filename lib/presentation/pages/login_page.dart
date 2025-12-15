@@ -1,0 +1,22 @@
+import 'package:flutter/material.dart';
+
+class LoginPage extends StatelessWidget {
+  const LoginPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Login')),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () {
+            // Simula login com sucesso
+            // Login bem-sucedido → vai para biometria
+            Navigator.pushReplacementNamed(context, '/biometric');
+          },
+          child: const Text('Entrar'),
+        ),
+      ),
+    );
+  }
+}
