@@ -12,7 +12,7 @@ class LoginPage extends StatelessWidget {
           onPressed: () {
             // Simula login com sucesso
             // Login bem-sucedido → vai para biometria
-            Navigator.pushReplacementNamed(context, '/biometric');
+//            Navigator.pushReplacementNamed(context, '/biometric');
           },
           child: const Text('Entrar'),
         ),
