@@ -12,15 +12,171 @@ class TransactionsPage extends StatefulWidget {
 class _TransactionsPageState extends State<TransactionsPage> {
   late Future<List<TransactionModel>> _future;
 
+  List<TransactionModel> _allTransactions = [];
+  List<TransactionModel> _filteredTransactions = [];
+
+  String _searchText = '';
+  int? _selectedUserId;
+
+  int _currentPage = 0;
+  final int _itemsPerPage = 15; // pode aumentar sem quebrar layout
+
   @override
   void initState() {
     super.initState();
     _future = TransactionService().fetchTransactions();
   }
 
+  void _applyFilters() {
+    setState(() {
+      _currentPage = 0;
+
+      _filteredTransactions = _allTransactions.where((t) {
+        final matchesText =
+            t.title.toLowerCase().contains(_searchText.toLowerCase());
+
+        final matchesUser =
+            _selectedUserId == null || t.userId == _selectedUserId;
+
+        return matchesText && matchesUser;
+      }).toList();
+    });
+  }
+
+  List<TransactionModel> _paginatedTransactions() {
+    final start = _currentPage * _itemsPerPage;
+    final end = start + _itemsPerPage;
+
+    return _filteredTransactions.sublist(
+      start,
+      end > _filteredTransactions.length
+          ? _filteredTransactions.length
+          : end,
+    );
+  }
+
+  Widget _buildFilters() {
+    final userIds = _allTransactions
+        .map((t) => t.userId)
+        .toSet()
+        .toList()
+      ..sort();
+
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        children: [
+          TextField(
+            decoration: const InputDecoration(
+              labelText: 'Filtrar por título',
+              prefixIcon: Icon(Icons.search),
+              border: OutlineInputBorder(),
+            ),
+            onChanged: (value) {
+              _searchText = value;
+              _applyFilters();
+            },
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<int?>(
+            value: _selectedUserId,
+            decoration: const InputDecoration(
+              labelText: 'Filtrar por User ID',
+              border: OutlineInputBorder(),
+            ),
+            items: [
+              const DropdownMenuItem<int?>(
+                value: null,
+                child: Text('Todos'),
+              ),
+              ...userIds.map(
+                (id) => DropdownMenuItem<int?>(
+                  value: id,
+                  child: Text('User $id'),
+                ),
+              ),
+            ],
+            onChanged: (value) {
+              _selectedUserId = value;
+              _applyFilters();
+            },
+            isExpanded: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTable() {
+    final pageItems = _paginatedTransactions();
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.vertical,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: DataTable(
+          columns: const [
+            DataColumn(label: Text('ID')),
+            DataColumn(label: Text('Title')),
+            DataColumn(label: Text('UserId')),
+          ],
+          rows: pageItems
+              .map(
+                (t) => DataRow(
+                  cells: [
+                    DataCell(Text(t.id.toString())),
+                    DataCell(Text(t.title)),
+                    DataCell(Text(t.userId.toString())),
+                  ],
+                ),
+              )
+              .toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPaginationControls() {
+    final totalPages =
+        (_filteredTransactions.length / _itemsPerPage).ceil();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: const Border(
+          top: BorderSide(color: Colors.black12),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            onPressed: _currentPage > 0
+                ? () => setState(() => _currentPage--)
+                : null,
+            icon: const Icon(Icons.chevron_left),
+          ),
+          Text(
+            'Página ${_currentPage + 1} de $totalPages',
+          ),
+          IconButton(
+            onPressed: _currentPage < totalPages - 1
+                ? () => setState(() => _currentPage++)
+                : null,
+            icon: const Icon(Icons.chevron_right),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Transações'),
+      ),
       body: FutureBuilder<List<TransactionModel>>(
         future: _future,
         builder: (context, snapshot) {
@@ -41,25 +197,20 @@ class _TransactionsPageState extends State<TransactionsPage> {
             );
           }
 
-          final transactions = snapshot.data!;
+          _allTransactions = snapshot.data!;
 
-          return SingleChildScrollView(
-            child: DataTable(
-              columns: const [
-                DataColumn(label: Text('ID')),
-                DataColumn(label: Text('Title')),
-              ],
-              rows: transactions
-                  .map(
-                    (t) => DataRow(
-                      cells: [
-                        DataCell(Text(t.id.toString())),
-                        DataCell(Text(t.title)),
-                      ],
-                    ),
-                  )
-                  .toList(),
-            ),
+          if (_filteredTransactions.isEmpty &&
+              _searchText.isEmpty &&
+              _selectedUserId == null) {
+            _filteredTransactions = _allTransactions;
+          }
+
+          return Column(
+            children: [
+              _buildFilters(),
+              Expanded(child: _buildTable()),
+              _buildPaginationControls(),
+            ],
           );
         },
       ),
