@@ -19,7 +19,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
   int? _selectedUserId;
 
   int _currentPage = 0;
-  final int _itemsPerPage = 15; // pode aumentar sem quebrar layout
+  final int _itemsPerPage = 15;
 
   @override
   void initState() {
@@ -34,10 +34,8 @@ class _TransactionsPageState extends State<TransactionsPage> {
       _filteredTransactions = _allTransactions.where((t) {
         final matchesText =
             t.title.toLowerCase().contains(_searchText.toLowerCase());
-
         final matchesUser =
             _selectedUserId == null || t.userId == _selectedUserId;
-
         return matchesText && matchesUser;
       }).toList();
     });
@@ -46,6 +44,8 @@ class _TransactionsPageState extends State<TransactionsPage> {
   List<TransactionModel> _paginatedTransactions() {
     final start = _currentPage * _itemsPerPage;
     final end = start + _itemsPerPage;
+
+    if (start >= _filteredTransactions.length) return [];
 
     return _filteredTransactions.sublist(
       start,
@@ -100,39 +100,48 @@ class _TransactionsPageState extends State<TransactionsPage> {
               _selectedUserId = value;
               _applyFilters();
             },
-            isExpanded: true,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTable() {
+  Widget _buildTable(BuildContext context) {
     final pageItems = _paginatedTransactions();
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.vertical,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          columns: const [
-            DataColumn(label: Text('ID')),
-            DataColumn(label: Text('Title')),
-            DataColumn(label: Text('UserId')),
-          ],
-          rows: pageItems
-              .map(
-                (t) => DataRow(
-                  cells: [
-                    DataCell(Text(t.id.toString())),
-                    DataCell(Text(t.title)),
-                    DataCell(Text(t.userId.toString())),
-                  ],
-                ),
-              )
-              .toList(),
-        ),
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final tableHeight = constraints.maxHeight;
+
+        return SizedBox(
+          height: tableHeight,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                columnSpacing: 24,
+                columns: const [
+                  DataColumn(label: Text('ID')),
+                  DataColumn(label: Text('Title')),
+                  DataColumn(label: Text('UserId')),
+                ],
+                rows: pageItems
+                    .map(
+                      (t) => DataRow(
+                        cells: [
+                          DataCell(Text(t.id.toString())),
+                          DataCell(Text(t.title)),
+                          DataCell(Text(t.userId.toString())),
+                        ],
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -142,11 +151,8 @@ class _TransactionsPageState extends State<TransactionsPage> {
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        border: const Border(
-          top: BorderSide(color: Colors.black12),
-        ),
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: Colors.black12)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -159,6 +165,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
           ),
           Text(
             'Página ${_currentPage + 1} de $totalPages',
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           IconButton(
             onPressed: _currentPage < totalPages - 1
@@ -173,47 +180,44 @@ class _TransactionsPageState extends State<TransactionsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Transações'),
-      ),
-      body: FutureBuilder<List<TransactionModel>>(
-        future: _future,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    return FutureBuilder<List<TransactionModel>>(
+      future: _future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-          if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  'Erro:\n${snapshot.error}',
-                  style: const TextStyle(color: Colors.red),
-                  textAlign: TextAlign.center,
-                ),
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'Erro ao carregar dados:\n${snapshot.error}',
+                style: const TextStyle(color: Colors.red),
+                textAlign: TextAlign.center,
               ),
-            );
-          }
-
-          _allTransactions = snapshot.data!;
-
-          if (_filteredTransactions.isEmpty &&
-              _searchText.isEmpty &&
-              _selectedUserId == null) {
-            _filteredTransactions = _allTransactions;
-          }
-
-          return Column(
-            children: [
-              _buildFilters(),
-              Expanded(child: _buildTable()),
-              _buildPaginationControls(),
-            ],
+            ),
           );
-        },
-      ),
+        }
+
+        _allTransactions = snapshot.data!;
+
+        if (_filteredTransactions.isEmpty &&
+            _searchText.isEmpty &&
+            _selectedUserId == null) {
+          _filteredTransactions = _allTransactions;
+        }
+
+        return Column(
+          children: [
+            _buildFilters(),
+            Expanded(
+              child: _buildTable(context),
+            ),
+            _buildPaginationControls(),
+          ],
+        );
+      },
     );
   }
 }
